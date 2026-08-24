@@ -15,8 +15,8 @@ export function SetupNotice({ reason }: { reason?: "not_configured" | "forbidden
         ) : (
           <p className="mt-4 text-sm leading-relaxed text-muted">
             Supabase još nije podešen. Dodajte <code className="text-cream">NEXT_PUBLIC_SUPABASE_URL</code> i
-            ključ u <code className="text-cream">.env.local</code>, pa napravite admin nalog u Supabase
-            dashboardu.
+            publishable ključ u <code className="text-cream">.env.local</code> (lokalno) ili u Vercel
+            Environment Variables za Production (ne kao Sensitive), pa ponovo deployujte.
           </p>
         )}
       </div>

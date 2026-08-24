@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { isQuoteEmailConfigured, sendQuoteEmail } from "@/lib/quote-email";
 import { quoteRequestSchema, validateQuotePhotos, type QuoteRequestResult } from "@/lib/quote-request";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { getPublicClientIp, isHoneypotTriggered } from "@/lib/security/request";
@@ -48,36 +49,20 @@ export async function POST(request: Request): Promise<Response> {
     return json({ ok: false, status: "upload_error", message: photoError }, 400);
   }
 
-  const webhook = process.env.QUOTE_WEBHOOK_URL;
-
-  if (!webhook) {
-    const message =
-      process.env.NODE_ENV === "development"
-        ? "Integracija forme još nije konfigurisana. Upit nije poslat. Podesite QUOTE_WEBHOOK_URL ili drugi backend pre produkcije."
-        : "Slanje upita trenutno nije aktivno. Kontaktirajte nas putem Instagrama.";
-
-    return json({ ok: false, status: "not_configured", message }, 503);
+  if (!isQuoteEmailConfigured()) {
+    return json(
+      {
+        ok: false,
+        status: "not_configured",
+        message: "Slanje upita trenutno nije aktivno. Pozovite nas telefonom ili pišite na Instagramu.",
+      },
+      503,
+    );
   }
 
   try {
-    const payload = {
-      ...parsed.data,
-      photoCount: photos.length,
-      submittedAt: new Date().toISOString(),
-    };
-
-    const response = await fetch(webhook, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: process.env.QUOTE_WEBHOOK_TOKEN
-          ? `Bearer ${process.env.QUOTE_WEBHOOK_TOKEN}`
-          : "",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
+    const sent = await sendQuoteEmail(parsed.data, photos);
+    if (!sent.ok) {
       return json(
         {
           ok: false,

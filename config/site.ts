@@ -26,7 +26,7 @@ export const siteConfig = {
     { name: "Veljko", phone: "+381612026312", phoneLabel: "061 20 26 312" },
   ] satisfies SiteContact[],
 
-  email: "",
+  email: "stefan.katanic8@gmail.com",
   location: "Mali Radinci, Ruma",
   serviceArea: "",
 
