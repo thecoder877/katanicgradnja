@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useState, type BaseSyntheticEvent } from "react";
+import { useCallback, useMemo, useState, type BaseSyntheticEvent } from "react";
 import { useForm } from "react-hook-form";
+import { ContactPromptDialog } from "@/components/contact/ContactPromptDialog";
 import { HoneypotField } from "@/components/security/HoneypotField";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,8 @@ export function ContactForm() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [resultTone, setResultTone] = useState<"ok" | "warn" | "error">("ok");
+  const [showInstagramPrompt, setShowInstagramPrompt] = useState(false);
+  const closeInstagramPrompt = useCallback(() => setShowInstagramPrompt(false), []);
 
   const {
     register,
@@ -81,9 +84,13 @@ export function ContactForm() {
 
     setResultTone(result.status === "not_configured" ? "warn" : "error");
     setResultMessage(result.message);
+    if (result.status === "not_configured" || result.status === "error") {
+      setShowInstagramPrompt(true);
+    }
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmit)} className="relative space-y-5" noValidate>
       <HoneypotField />
       <div>
@@ -205,5 +212,7 @@ export function ContactForm() {
         {isSubmitting ? "Slanje..." : "Pošaljite upit"}
       </Button>
     </form>
+    <ContactPromptDialog open={showInstagramPrompt} onClose={closeInstagramPrompt} />
+    </>
   );
 }
