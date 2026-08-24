@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">Katani Gradnja 022</title>
+  <path d="M12 42 L40 16 L68 42" stroke="#F5F3EE" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20 42 V68 H60 V42" stroke="#F5F3EE" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M36 68 V54 H44 V68" stroke="#F5F3EE" stroke-width="2.6" stroke-linejoin="round"/>
+  <path d="M18 72 H62" stroke="#C58A43" stroke-width="2.4" stroke-linecap="round"/>
+</svg>
