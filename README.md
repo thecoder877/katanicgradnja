@@ -21,18 +21,6 @@ npm run build
 npm start
 ```
 
-## Podaci o firmi
-
-Kontakt podaci su u [`config/site.ts`](config/site.ts):
-
-- telefoni: Stefan (`062 712 772`) i Veljko (`061 20 26 312`)
-- e-mail (prazno dok se ne potvrdi)
-- lokacija: Mali Radinci, Ruma
-- Instagram
-- kanonski URL sajta (`NEXT_PUBLIC_SITE_URL`)
-
-Prazna polja se **ne prikazuju**. Ne unositi izmišljene podatke.
-
 ## Projekti i fotografije
 
 Javna galerija čita projekte iz **Supabase** baze. Ako baza nije dostupna, koristi se rezervni katalog u [`data/projects.ts`](data/projects.ts).
