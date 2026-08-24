@@ -1,4 +1,5 @@
 # Katanić Gradnja 022
+<img width="1920" height="8456" alt="oneclickshot" src="https://github.com/user-attachments/assets/45244eae-7300-4966-8732-977b927a117a" />
 
 Sajt građevinske firme **Katanić Gradnja 022**.
 
