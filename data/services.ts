@@ -4,6 +4,23 @@ import type { Service } from "@/types/service";
 
 export const services: Service[] = [
   {
+    slug: "krovovi",
+    title: "Krovovi",
+    shortTitle: "Krovovi",
+    summary:
+      "Izrada novih i rekonstrukcija postojećih krovova u Rumi i okolini, prema stanju objekta i dogovorenom obimu.",
+    description:
+      "Izvodimo nove krovove i rekonstrukcije postojećih krovnih konstrukcija. Nakon razgovora i obilaska objekta definišemo potreban obim, materijal i uslove izvođenja.",
+    details: [
+      "Nove krovne konstrukcije",
+      "Rekonstrukcija i zamena dotrajalih delova",
+      "Dogovor obima nakon obilaska",
+    ],
+    coverImage: "/images/hero/hero-cover.png",
+    relatedCategory: "Krovovi",
+    placeholderImages: true,
+  },
+  {
     slug: "izgradnja-kuca",
     title: "Izgradnja kuća",
     shortTitle: "Izgradnja",

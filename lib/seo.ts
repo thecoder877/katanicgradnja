@@ -21,11 +21,13 @@ export const defaultMetadata: Metadata = {
     siteName: siteConfig.name,
     title: defaultTitle,
     description: siteConfig.description,
+    images: [{ url: siteConfig.images.og }],
   },
   twitter: {
     card: "summary_large_image",
     title: defaultTitle,
     description: siteConfig.description,
+    images: [siteConfig.images.og],
   },
   robots: {
     index: true,
@@ -37,12 +39,15 @@ export function pageMetadata({
   title,
   description,
   path,
+  image,
 }: {
   title: string;
   description: string;
   path: string;
+  image?: string;
 }): Metadata {
   const url = absoluteUrl(path);
+  const shareImage = image || siteConfig.images.og;
 
   return {
     title,
@@ -57,11 +62,13 @@ export function pageMetadata({
       siteName: siteConfig.name,
       title: `${title} | ${siteConfig.name}`,
       description,
+      images: [{ url: shareImage }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | ${siteConfig.name}`,
       description,
+      images: [shareImage],
     },
   };
 }

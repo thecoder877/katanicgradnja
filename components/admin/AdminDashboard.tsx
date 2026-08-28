@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   createProjectAction,
   deleteImageAction,
@@ -17,20 +17,32 @@ import { projectCategories, type AdminProject } from "@/types/project";
 export function AdminDashboard({
   email,
   projects,
+  loadError,
 }: {
   email: string;
   projects: AdminProject[];
+  loadError: string | null;
 }) {
   const [message, setMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
 
   async function run(action: (formData: FormData) => Promise<{ ok: boolean; error?: string }>, formData: FormData) {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    setPending(true);
     setMessage(null);
-    const result = await action(formData);
-    if (!result.ok) setMessage(result.error ?? "Akcija nije uspela.");
+    try {
+      const result = await action(formData);
+      if (!result.ok) setMessage(result.error ?? "Akcija nije uspela.");
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
+    }
   }
 
   return (
-    <div className="min-h-svh bg-ink text-cream">
+    <div className="min-h-svh bg-ink text-cream" aria-busy={pending}>
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
           <div>
@@ -51,12 +63,17 @@ export function AdminDashboard({
       </header>
 
       <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
+        {loadError ? (
+          <p role="alert" className="rounded-[10px] border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm">
+            {loadError}
+          </p>
+        ) : null}
         {message ? <p className="rounded-[10px] border border-accent/40 bg-accent/10 px-4 py-3 text-sm">{message}</p> : null}
 
         <section className="rounded-[12px] border border-line bg-surface p-6">
           <h2 className="font-heading text-lg font-semibold">Novi projekat</h2>
           <p className="mt-1 text-sm text-muted">
-            Naziv, kategorija i fotografije. Kasnije možete dodavati ili brisati slike.
+            Novi projekat se prvo čuva kao draft. Objavite ga tek kada dopunite lokaciju i fotografije.
           </p>
           <form
             className="mt-6 grid gap-4"
@@ -70,27 +87,29 @@ export function AdminDashboard({
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/avif"
                 multiple
+                disabled={pending}
                 className="mt-2 block w-full text-sm font-normal tracking-normal file:mr-3 file:rounded-[8px] file:border-0 file:bg-accent file:px-3 file:py-2 file:text-ink"
               />
             </label>
-            <Button type="submit" className="justify-self-start">
-              Sačuvaj projekat
+            <Button type="submit" disabled={pending} className="justify-self-start">
+              {pending ? "Čuvanje…" : "Sačuvaj projekat"}
             </Button>
           </form>
         </section>
 
         <section className="space-y-6">
           <h2 className="font-heading text-lg font-semibold">Postojeći projekti</h2>
-          {projects.length === 0 ? (
+          {!loadError && projects.length === 0 ? (
             <p className="text-sm text-muted">Još nema projekata u bazi.</p>
           ) : (
             projects.map((project) => (
               <article key={project.id} className="rounded-[12px] border border-line bg-surface p-6">
+                {!project.published ? <DraftReadiness project={project} /> : null}
                 <form className="grid gap-4" action={(formData) => run(updateProjectAction, formData)}>
                   <input type="hidden" name="id" value={project.id} />
                   <ProjectFields project={project} />
                   <div className="flex flex-wrap gap-3">
-                    <Button type="submit">Sačuvaj izmene</Button>
+                    <Button type="submit" disabled={pending}>Sačuvaj izmene</Button>
                   </div>
                 </form>
 
@@ -105,6 +124,7 @@ export function AdminDashboard({
                           <input type="hidden" name="src" value={image.src} />
                           <button
                             type="submit"
+                            disabled={pending}
                             className="min-h-10 px-2 text-xs text-cream/80 hover:text-accent"
                           >
                             {project.coverImage === image.src ? "Naslovna" : "Postavi naslovnu"}
@@ -113,7 +133,7 @@ export function AdminDashboard({
                         <form action={(formData) => run(deleteImageAction, formData)}>
                           <input type="hidden" name="projectId" value={project.id} />
                           <input type="hidden" name="imageId" value={image.id} />
-                          <button type="submit" className="min-h-10 px-2 text-xs text-cream/80 hover:text-accent">
+                          <button disabled={pending} type="submit" className="min-h-10 px-2 text-xs text-cream/80 hover:text-accent disabled:opacity-50">
                             Obriši
                           </button>
                         </form>
@@ -134,10 +154,11 @@ export function AdminDashboard({
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/avif"
                       multiple
+                      disabled={pending}
                       className="mt-2 block w-full text-sm font-normal tracking-normal file:mr-3 file:rounded-[8px] file:border-0 file:bg-cream file:px-3 file:py-2 file:text-ink"
                     />
                   </label>
-                  <Button type="submit" variant="secondary">
+                  <Button type="submit" variant="secondary" disabled={pending}>
                     Upload
                   </Button>
                 </form>
@@ -147,7 +168,7 @@ export function AdminDashboard({
                   action={(formData) => run(deleteProjectAction, formData)}
                 >
                   <input type="hidden" name="id" value={project.id} />
-                  <Button type="submit" variant="outline" className="border-accent/40 text-accent hover:bg-accent/10">
+                  <Button type="submit" variant="outline" disabled={pending} className="border-accent/40 text-accent hover:bg-accent/10">
                     Obriši projekat
                   </Button>
                 </form>
@@ -157,6 +178,24 @@ export function AdminDashboard({
         </section>
       </div>
     </div>
+  );
+}
+
+function DraftReadiness({ project }: { project: AdminProject }) {
+  const missing = [
+    !project.location?.trim() ? "lokaciju" : null,
+    project.imageRecords.length === 0 ? "bar jednu fotografiju" : null,
+    !project.coverImage || !project.imageRecords.some((image) => image.src === project.coverImage)
+      ? "naslovnu fotografiju"
+      : null,
+  ].filter(Boolean);
+
+  return (
+    <p className="mb-5 rounded-[10px] border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
+      {missing.length > 0
+        ? `Draft — pre objave dopunite: ${missing.join(", ")}.`
+        : "Draft je spreman za objavu."}
+    </p>
   );
 }
 
@@ -195,6 +234,38 @@ function ProjectFields({ project }: { project?: AdminProject }) {
           className="mt-2 w-full rounded-[10px] border border-line bg-ink px-3 py-2 text-sm font-normal tracking-normal text-cream"
         />
       </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="text-xs font-semibold tracking-[0.14em] uppercase">
+          Lokacija
+          <input
+            name="location"
+            defaultValue={project?.location ?? ""}
+            maxLength={120}
+            className="mt-2 min-h-11 w-full rounded-[10px] border border-line bg-ink px-3 text-sm font-normal tracking-normal text-cream"
+          />
+        </label>
+        <label className="text-xs font-semibold tracking-[0.14em] uppercase">
+          Godina
+          <input
+            name="year"
+            type="number"
+            min={1900}
+            max={new Date().getFullYear() + 1}
+            defaultValue={project?.year ?? ""}
+            className="mt-2 min-h-11 w-full rounded-[10px] border border-line bg-ink px-3 text-sm font-normal tracking-normal text-cream"
+          />
+        </label>
+      </div>
+      <label className="text-xs font-semibold tracking-[0.14em] uppercase">
+        Izvedeni radovi — jedna stavka po redu
+        <textarea
+          name="workItems"
+          rows={4}
+          maxLength={2000}
+          defaultValue={project?.workItems.join("\n") ?? ""}
+          className="mt-2 w-full rounded-[10px] border border-line bg-ink px-3 py-2 text-sm font-normal tracking-normal text-cream"
+        />
+      </label>
       <label className="text-xs font-semibold tracking-[0.14em] uppercase">
         Raspored kartice
         <select
@@ -213,7 +284,7 @@ function ProjectFields({ project }: { project?: AdminProject }) {
           Istaknut
         </label>
         <label className="inline-flex items-center gap-2">
-          <input name="published" type="checkbox" defaultChecked={project?.published ?? true} />
+          <input name="published" type="checkbox" defaultChecked={project?.published ?? false} />
           Objavljen
         </label>
       </div>

@@ -2,7 +2,7 @@ import { ProjectCard } from "@/components/projects/ProjectCard";
 import { ProjectFilters } from "@/components/projects/ProjectFilters";
 import { Container } from "@/components/ui/container";
 import { SectionEyebrow, SectionHeading } from "@/components/ui/section-heading";
-import { filterProjects } from "@/lib/content/projects";
+import { filterProjects, getProjectCatalog } from "@/lib/content/projects";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -18,6 +18,7 @@ type Props = {
 
 export default async function ProjectsPage({ searchParams }: Props) {
   const { category } = await searchParams;
+  const catalog = await getProjectCatalog();
   const projects = await filterProjects(category);
 
   return (
@@ -33,7 +34,11 @@ export default async function ProjectsPage({ searchParams }: Props) {
         </p>
         <div className="mt-10">
           <ProjectFilters current={category} />
-          {projects.length === 0 ? (
+          {catalog.status === "unavailable" ? (
+            <p className="mt-10 max-w-xl text-muted-dark">
+              Projekti su trenutno nedostupni. Sve usluge i telefonski kontakt i dalje su dostupni.
+            </p>
+          ) : projects.length === 0 ? (
             <p className="mt-10 text-muted-dark">Trenutno nema projekata u ovoj kategoriji.</p>
           ) : (
             <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

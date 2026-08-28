@@ -1,21 +1,24 @@
 import { projects as staticProjects } from "@/data/projects";
+import { cache } from "react";
+import { resolveProjectCatalog, type RemoteProjectResult } from "@/lib/content/project-catalog";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { mapAdminProject, mapProject } from "@/lib/supabase/map-project";
 import {
   projectFilterOptions,
-  type AdminProject,
+  type AdminProjectsResult,
   type Project,
   type ProjectCategory,
   type ProjectFilterValue,
+  type ProjectCatalogResult,
+  selectFeaturedProjects,
+  selectRelatedProjects,
 } from "@/types/project";
 
 const PROJECT_SELECT = "*, project_images(*)";
 
-async function fetchRemoteProjects(publishedOnly: boolean): Promise<Project[] | null> {
-  if (!isSupabaseConfigured()) return null;
-
+async function fetchRemoteProjects(publishedOnly: boolean): Promise<RemoteProjectResult> {
   try {
     const supabase = createPublicClient();
     let query = supabase
@@ -29,26 +32,34 @@ async function fetchRemoteProjects(publishedOnly: boolean): Promise<Project[] | 
     }
 
     const { data, error } = await query;
-    if (error || !data) return null;
-    return data.map(mapProject);
-  } catch {
-    return null;
+    if (error || !data) {
+      console.warn("projects.fetch_failed", { code: error?.code ?? "missing_data" });
+      return { ok: false, errorCode: error?.code };
+    }
+    return { ok: true, projects: data.map(mapProject) };
+  } catch (error) {
+    console.warn("projects.fetch_failed", {
+      code: error instanceof Error ? error.name : "unknown_error",
+    });
+    return { ok: false, errorCode: error instanceof Error ? error.name : "unknown_error" };
   }
 }
 
-export async function getProjects(): Promise<Project[]> {
-  const remote = await fetchRemoteProjects(true);
-  if (!remote) return staticProjects;
+const loadProjectCatalog = cache(async (): Promise<ProjectCatalogResult> => {
+  const configured = isSupabaseConfigured();
+  const remote = configured ? await fetchRemoteProjects(true) : null;
+  return resolveProjectCatalog(configured, remote, staticProjects);
+});
 
-  const remoteSlugs = new Set(remote.map((project) => project.slug));
-  const extras = staticProjects.filter((project) => !remoteSlugs.has(project.slug));
-  return extras.length > 0 ? [...remote, ...extras] : remote;
+export const getProjectCatalog = loadProjectCatalog;
+
+export async function getProjects(): Promise<Project[]> {
+  return (await getProjectCatalog()).projects;
 }
 
 export async function getFeaturedProjects(): Promise<Project[]> {
   const all = await getProjects();
-  const featured = all.filter((project) => project.featured);
-  return featured.length > 0 ? featured : all.slice(0, 6);
+  return selectFeaturedProjects(all);
 }
 
 export async function getProjectBySlug(slug: string): Promise<Project | undefined> {
@@ -68,9 +79,7 @@ export async function getProjectsByCategory(category: ProjectCategory): Promise<
 
 export async function getRelatedProjects(project: Project, limit = 3): Promise<Project[]> {
   const all = await getProjects();
-  return all
-    .filter((item) => item.slug !== project.slug && item.category === project.category)
-    .slice(0, limit);
+  return selectRelatedProjects(project, all, limit);
 }
 
 export function isProjectFilterValue(value: string | undefined): value is ProjectFilterValue {
@@ -92,16 +101,26 @@ export function getFilterLabel(categoryParam?: string): string {
   return option?.label ?? "Sve";
 }
 
-export async function getAdminProjects(): Promise<AdminProject[]> {
-  if (!isSupabaseConfigured()) return [];
+export async function getAdminProjects(): Promise<AdminProjectsResult> {
+  if (!isSupabaseConfigured()) return { ok: true, projects: [] };
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("projects")
-    .select(PROJECT_SELECT)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("projects")
+      .select(PROJECT_SELECT)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
 
-  if (error || !data) return [];
-  return data.map(mapAdminProject);
+    if (error || !data) {
+      console.warn("admin.projects_fetch_failed", { code: error?.code ?? "missing_data" });
+      return { ok: false, projects: [], error: "Projekti nisu učitani. Pokušajte ponovo." };
+    }
+    return { ok: true, projects: data.map(mapAdminProject) };
+  } catch (error) {
+    console.warn("admin.projects_fetch_failed", {
+      code: error instanceof Error ? error.name : "unknown_error",
+    });
+    return { ok: false, projects: [], error: "Projekti nisu učitani. Pokušajte ponovo." };
+  }
 }

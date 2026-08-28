@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { ContentImage } from "@/components/media/ContentImage";
+import { getPhoneHref } from "@/config/site";
 import { getProjects } from "@/lib/content/projects";
 import { getServiceBySlug, getServiceSlugs, withServiceProjectCovers } from "@/lib/content/services";
 import { getServiceJsonLd } from "@/lib/json-ld";
@@ -29,6 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: service.title,
     description: service.summary,
     path: `/usluge/${service.slug}`,
+    image: service.coverImage,
   });
 }
 
@@ -42,6 +44,7 @@ export default async function ServicePage({ params }: Props) {
   const related = resolved.relatedCategory
     ? projects.filter((project) => project.category === resolved.relatedCategory).slice(0, 3)
     : [];
+  const phoneHref = getPhoneHref() ?? "/kontakt";
 
   return (
     <>
@@ -71,8 +74,8 @@ export default async function ServicePage({ params }: Props) {
                 {service.title}
               </h1>
               <p className="mt-5 max-w-xl text-lg text-muted-dark">{service.description}</p>
-              <ButtonLink href="/kontakt" className="mt-8">
-                Zatražite ponudu
+              <ButtonLink href={phoneHref} className="mt-8">
+                Pozovite za dogovor
               </ButtonLink>
             </div>
             <ContentImage

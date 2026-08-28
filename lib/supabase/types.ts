@@ -17,6 +17,7 @@ export type Database = {
           sort_order: number;
           layout: "wide" | "tall" | "standard";
           cover_image: string;
+          work_items: string[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -33,6 +34,7 @@ export type Database = {
           sort_order?: number;
           layout?: "wide" | "tall" | "standard";
           cover_image?: string;
+          work_items?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -49,6 +51,7 @@ export type Database = {
           sort_order?: number;
           layout?: "wide" | "tall" | "standard";
           cover_image?: string;
+          work_items?: string[] | null;
           updated_at?: string;
         };
         Relationships: [];

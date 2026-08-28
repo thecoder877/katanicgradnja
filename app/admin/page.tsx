@@ -27,6 +27,12 @@ export default async function AdminPage() {
     return <LoginForm />;
   }
 
-  const projects = await getAdminProjects();
-  return <AdminDashboard email={session.email} projects={projects} />;
+  const result = await getAdminProjects();
+  return (
+    <AdminDashboard
+      email={session.email}
+      projects={result.projects}
+      loadError={result.ok ? null : result.error}
+    />
+  );
 }
