@@ -36,6 +36,7 @@ export function mapProject(row: ProjectWithImages): Project {
     description: row.description || undefined,
     coverImage: cover,
     images: srcs.length > 0 ? srcs : cover ? [cover] : [],
+    workItems: row.work_items ?? [],
     featured: row.featured,
     layout: layoutOf(row.layout),
   };

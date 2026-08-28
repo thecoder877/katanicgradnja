@@ -6,6 +6,8 @@ import { SectionEyebrow, SectionHeading } from "@/components/ui/section-heading"
 import type { Project } from "@/types/project";
 
 export function FeaturedProjects({ projects }: { projects: Project[] }) {
+  if (projects.length === 0) return null;
+
   const [first, second, third, fourth, ...rest] = projects;
 
   return (

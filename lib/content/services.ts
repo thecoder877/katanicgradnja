@@ -21,12 +21,13 @@ export function getServiceSlugs(): string[] {
 
 /**
  * Use a real project photograph for each service card when that category
- * has published work. Categories without photos stay blank.
+ * has published work. Until then, keep the curated service fallback and
+ * mark it so the UI never presents it as project proof.
  */
 export function withServiceProjectCovers(serviceList: Service[], projects: Project[]): Service[] {
   return serviceList.map((service) => {
     if (!service.relatedCategory) {
-      return { ...service, coverImage: "", placeholderImages: true };
+      return { ...service, placeholderImages: true };
     }
 
     const match =
@@ -36,7 +37,7 @@ export function withServiceProjectCovers(serviceList: Service[], projects: Proje
       projects.find((project) => project.category === service.relatedCategory && project.coverImage);
 
     if (!match?.coverImage) {
-      return { ...service, coverImage: "", placeholderImages: true };
+      return { ...service, placeholderImages: true };
     }
 
     return { ...service, coverImage: match.coverImage, placeholderImages: false };

@@ -28,7 +28,7 @@ export const siteConfig = {
 
   email: "stefan.katanic8@gmail.com",
   location: "Mali Radinci, Ruma",
-  serviceArea: "",
+  serviceArea: "Opština Ruma i okolina; za veće projekte dolazimo i dalje po dogovoru.",
 
   instagram: "https://www.instagram.com/katanicgradnja022/",
   instagramHandle: "@katanicgradnja022",

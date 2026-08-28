@@ -2,12 +2,14 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { siteConfig } from "@/config/site";
+import { getPhoneHref, siteConfig } from "@/config/site";
 import { imageSizes } from "@/lib/images";
 
-const indicators = ["Izgradnja", "Rekonstrukcija", "Adaptacija", "Spoljni radovi"];
+const indicators = ["Ruma i okolina", "Direktan dogovor sa majstorom", "Obilazak pre ponude"];
 
 export function Hero() {
+  const phoneHref = getPhoneHref() ?? "/kontakt";
+
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-ink lg:min-h-[92vh] lg:items-center">
       <Image
@@ -21,7 +23,7 @@ export function Hero() {
       <div className="absolute inset-0 bg-ink/70" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,19,21,0.72)_0%,rgba(17,19,21,0.28)_58%,rgba(17,19,21,0.18)_100%)]" />
 
-      <Container className="relative z-10 w-full pt-28 pb-28 sm:pt-32 lg:pb-24">
+      <Container className="hero-reveal relative z-10 w-full pt-28 pb-28 sm:pt-32 lg:pb-24">
         <p className="text-[0.7rem] font-semibold tracking-[0.28em] text-accent uppercase">
           {siteConfig.name}
         </p>
@@ -29,15 +31,14 @@ export function Hero() {
           Gradimo od temelja do krova.
         </h1>
         <p className="mt-6 max-w-xl text-base leading-relaxed text-cream/78 sm:text-lg">
-          Gradnja, rekonstrukcije i adaptacije objekata, uređenje dvorišta, ograde,
-          behaton, bazeni i drugi građevinski radovi.
+          Gradnja i rekonstrukcija kuća, krovovi i drugi građevinski radovi u Rumi i okolini.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <ButtonLink href="/kontakt" size="lg">
-            Zatražite ponudu
+          <ButtonLink href={phoneHref} size="lg">
+            Pozovite za dogovor
           </ButtonLink>
           <ButtonLink href="/projekti" variant="secondary" size="lg">
-            Pogledajte projekte
+            Pogledajte izvedene radove
             <ArrowRight className="h-4 w-4" />
           </ButtonLink>
         </div>

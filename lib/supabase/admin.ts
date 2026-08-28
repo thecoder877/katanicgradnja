@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { hasAdminAccess } from "@/lib/security/admin-access";
 
 export type AdminSession =
   | { ok: true; email: string }
@@ -18,12 +19,13 @@ export async function getAdminSession(): Promise<AdminSession> {
     return { ok: false, reason: "unauthenticated" };
   }
 
-  const allowlist = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean);
+  const appMetadata = data.claims.app_metadata;
+  const role =
+    appMetadata && typeof appMetadata === "object" && "role" in appMetadata
+      ? String(appMetadata.role)
+      : "";
 
-  if (allowlist.length > 0 && !allowlist.includes(email.toLowerCase())) {
+  if (!hasAdminAccess({ email, role }, process.env.ADMIN_EMAILS ?? "")) {
     return { ok: false, reason: "forbidden" };
   }
 

@@ -7,9 +7,11 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { ContentImage } from "@/components/media/ContentImage";
-import { getProjectBySlug, getProjectSlugs, getRelatedProjects } from "@/lib/content/projects";
+import { getPhoneHref } from "@/config/site";
+import { getProjectBySlug, getProjectCatalog, getProjectSlugs } from "@/lib/content/projects";
 import { getBreadcrumbJsonLd } from "@/lib/json-ld";
 import { pageMetadata } from "@/lib/seo";
+import { selectRelatedProjects } from "@/types/project";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -31,16 +33,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: project.title,
     description: project.description ?? `${project.title} — ${project.category}.`,
     path: `/projekti/${project.slug}`,
+    image: project.coverImage,
   });
 }
 
 export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
-  const project = await getProjectBySlug(slug);
+  const catalog = await getProjectCatalog();
+  if (catalog.status === "unavailable") {
+    const phoneHref = getPhoneHref() ?? "/kontakt";
+    return (
+      <section className="bg-cream pt-32 pb-24">
+        <Container className="max-w-2xl">
+          <p className="text-[0.7rem] font-semibold tracking-[0.22em] text-accent uppercase">
+            Projekti
+          </p>
+          <h1 className="mt-4 font-heading text-4xl font-semibold tracking-[-0.04em]">
+            Projekat je trenutno nedostupan
+          </h1>
+          <p className="mt-5 text-muted-dark">
+            Galerija trenutno ne može da se učita. Pozovite nas za informacije o radovima i dogovor obilaska.
+          </p>
+          <ButtonLink href={phoneHref} className="mt-8">
+            Pozovite za dogovor
+          </ButtonLink>
+        </Container>
+      </section>
+    );
+  }
+
+  const project = catalog.projects.find((item) => item.slug === slug);
   if (!project) notFound();
 
-  const related = await getRelatedProjects(project);
+  const related = selectRelatedProjects(project, catalog.projects);
   const galleryImages = project.images.filter((image) => image !== project.coverImage);
+  const phoneHref = getPhoneHref() ?? "/kontakt";
 
   return (
     <>
@@ -98,6 +125,20 @@ export default async function ProjectPage({ params }: Props) {
               {project.description}
             </p>
           ) : null}
+          {project.workItems.length > 0 ? (
+            <div className="mt-10 max-w-2xl border-t border-line-dark pt-8">
+              <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em]">
+                Izvedeni radovi
+              </h2>
+              <ul className="mt-5 grid gap-3 text-muted-dark sm:grid-cols-2">
+                {project.workItems.map((item) => (
+                  <li key={item} className="border-l-2 border-accent pl-4">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {galleryImages.length > 0 ? (
             <div className="mt-12">
               <h2 className="mb-6 font-heading text-2xl font-semibold tracking-[-0.03em]">
@@ -115,11 +156,10 @@ export default async function ProjectPage({ params }: Props) {
             Imate sličan projekat?
           </h2>
           <p className="mt-4 text-cream/75">
-            Pošaljite nam osnovne informacije i fotografije, a mi ćemo vam se javiti u vezi sa
-            izvođenjem radova.
+            Pozovite majstora da se raspitate i dogovorite obilazak objekta pre ponude.
           </p>
-          <ButtonLink href="/kontakt" className="mt-8">
-            Zatražite ponudu
+          <ButtonLink href={phoneHref} className="mt-8">
+            Pozovite za dogovor
           </ButtonLink>
         </Container>
       </section>
